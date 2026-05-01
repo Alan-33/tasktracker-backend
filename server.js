@@ -5,7 +5,13 @@ const { Pool } = require('pg');
 
 const app = express();
 
-app.use(cors());
+// FIXED: Explicitly allow your Vercel frontend for production
+app.use(cors({
+    origin: 'https://tasktracker-frontend-eight.vercel.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
+
 app.use(express.json()); 
 
 const pool = new Pool({
@@ -19,6 +25,7 @@ const pool = new Pool({
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     try {
+        // Matches case-sensitive "Users" table and columns
         const result = await pool.query(
             'SELECT "UserId", "EmpName", "Email", "Role" FROM "Users" WHERE "Email" = $1 AND "Password" = $2', 
             [email, password]
@@ -33,7 +40,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 2. DASHBOARD SUMMARY (Requirement: Track progress, status, overdue)
+// 2. DASHBOARD SUMMARY
 app.get('/api/dashboard', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -50,7 +57,7 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
-// 3. CREATE PROJECT (Requirement: Users can create projects)
+// 3. CREATE PROJECT
 app.post('/api/projects', async (req, res) => {
     const { projectName } = req.body;
     try {
@@ -64,7 +71,7 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 
-// 4. FETCH PROJECTS (For the dropdown menu)
+// 4. FETCH PROJECTS
 app.get('/api/projects', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM "Projects" ORDER BY "ProjectId" DESC');
@@ -74,7 +81,7 @@ app.get('/api/projects', async (req, res) => {
     }
 });
 
-// 5. FETCH USERS (For the "Assign to Member" dropdown)
+// 5. FETCH USERS
 app.get('/api/users', async (req, res) => {
     try {
         const result = await pool.query('SELECT "UserId", "EmpName" FROM "Users" WHERE "Role" = \'Member\'');
@@ -84,7 +91,7 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// 6. FETCH TASKS (Role-based filtering)
+// 6. FETCH TASKS
 app.get('/api/tasks', async (req, res) => {
     const { userId, role } = req.query;
     try {
@@ -106,7 +113,7 @@ app.get('/api/tasks', async (req, res) => {
     }
 });
 
-// 7. CREATE TASK (Requirement: Assign tasks)
+// 7. CREATE TASK
 app.post('/api/tasks', async (req, res) => {
     const { taskName, assignedTo, projectId, dueDate } = req.body;
     try {
@@ -120,7 +127,7 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
-// 8. UPDATE TASK STATUS (Requirement: Track progress)
+// 8. UPDATE TASK STATUS
 app.put('/api/tasks/:id', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
