@@ -5,10 +5,11 @@ const { Pool } = require('pg');
 
 const app = express();
 
-// FIXED: Explicitly allow your Vercel frontend for production
+// FIXED: Explicitly allow Vercel and handle the 'OPTIONS' preflight handshake
 app.use(cors({
     origin: 'https://tasktracker-frontend-eight.vercel.app',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 
@@ -25,7 +26,7 @@ const pool = new Pool({
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        // Matches case-sensitive "Users" table and columns
+        // Matches your case-sensitive "Users" table in Railway
         const result = await pool.query(
             'SELECT "UserId", "EmpName", "Email", "Role" FROM "Users" WHERE "Email" = $1 AND "Password" = $2', 
             [email, password]
